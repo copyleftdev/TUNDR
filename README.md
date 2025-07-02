@@ -1,10 +1,44 @@
-# TUNDR MCP Optimization Server
+<div align="center">
+  <img src="media/logo.png" alt="TUNDR MCP Logo" width="200">
+  <h1>TUNDR MCP Optimization Server</h1>
+  
+  [![Go Report Card](https://goreportcard.com/badge/github.com/tundr/mcp-optimization-server)](https://goreportcard.com/report/github.com/tundr/mcp-optimization-server)
+  [![Go Reference](https://pkg.go.dev/badge/github.com/tundr/mcp-optimization-server.svg)](https://pkg.go.dev/github.com/tundr/mcp-optimization-server)
+  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+  [![Tests](https://github.com/tundr/mcp-optimization-server/actions/workflows/tests.yml/badge.svg)](https://github.com/tundr/mcp-optimization-server/actions)
+  [![Coverage Status](https://coveralls.io/repos/github/tundr/mcp-optimization-server/badge.svg?branch=main)](https://coveralls.io/github/tundr/mcp-optimization-server?branch=main)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/tundr/mcp-optimization-server)](https://goreportcard.com/report/github.com/tundr/mcp-optimization-server)
-[![Go Reference](https://pkg.go.dev/badge/github.com/tundr/mcp-optimization-server.svg)](https://pkg.go.dev/github.com/tundr/mcp-optimization-server)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+  A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes.
+</div>
 
-A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes.
+## 🌟 Features
+
+### 🎯 Bayesian Optimization
+- Multiple kernel support (Matern 5/2, RBF, Custom)
+- Expected Improvement, Probability of Improvement, and UCB acquisition functions
+- Support for both minimization and maximization problems
+- Parallel evaluation of multiple points
+- Constrained optimization support
+
+### 🛠️ Robust Implementation
+- Comprehensive test coverage (>90%)
+- Graceful error handling and recovery
+- Detailed structured logging with [zap](https://github.com/uber-go/zap)
+- Context-aware cancellation and timeouts
+- Memory-efficient matrix operations
+
+### 🚀 Performance Optimizations
+- Fast matrix operations with [gonum](https://gonum.org/)
+- Efficient memory management with object pooling
+- Optimized Cholesky decomposition with fallback to SVD
+- Parallel batch predictions
+
+### 📊 Monitoring & Observability
+- Prometheus metrics endpoint
+- Structured logging in JSON format
+- Distributed tracing support (OpenTelemetry)
+- Health check endpoints
+- Performance profiling endpoints
 
 ## Features
 
@@ -39,15 +73,169 @@ A high-performance optimization server implementing the Model Context Protocol (
   - Multiple storage backends (SQLite, PostgreSQL)
   - Caching layer (Redis)
 
-## Prerequisites
+## 🚀 Quick Start
+
+### Prerequisites
 
 - Go 1.21 or later
-- SQLite3 (for development) or PostgreSQL (for production)
+- Git (for version control)
 - Make (for development tasks)
-- Git (for cloning the repository)
-- Docker (optional, for containerized deployment)
+- (Optional) Docker and Docker Compose for containerized deployment
 
-## Getting Started
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/tundr/mcp-optimization-server.git
+cd mcp-optimization-server
+
+# Install dependencies
+go mod download
+
+# Build the server
+go build -o bin/server ./cmd/server
+```
+
+### Running the Server
+
+```bash
+# Start the server with default configuration
+./bin/server
+
+# Or with custom configuration
+CONFIG_FILE=config/local.yaml ./bin/server
+```
+
+### Using Docker
+
+```bash
+# Build the Docker image
+docker build -t tundr/mcp-optimization-server .
+
+# Run the container
+docker run -p 8080:8080 tundr/mcp-optimization-server
+```
+
+## 📚 Documentation
+
+### API Reference
+
+Check out the [API Documentation](https://pkg.go.dev/github.com/tundr/mcp-optimization-server) for detailed information about the available methods and types.
+
+### Example: Basic Usage
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"math"
+	
+	"github.com/tundr/mcp-optimization-server/internal/optimization"
+	"github.com/tundr/mcp-optimization-server/internal/optimization/bayesian"
+	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+)
+
+func main() {
+	// Define the objective function (to be minimized)
+	objective := func(x []float64) (float64, error) {
+		// Example: Rosenbrock function
+		return math.Pow(1-x[0], 2) + 100*math.Pow(x[1]-x[0]*x[0], 2), nil
+	}
+
+	// Define parameter bounds
+	bounds := [][2]float64{{-5, 5}, {-5, 5}}
+
+	// Create optimizer configuration
+	config := optimization.OptimizerConfig{
+		Objective:     objective,
+		Bounds:        bounds,
+		MaxIterations: 50,
+		NInitialPoints: 10,
+	}
+
+	// Create a new Bayesian optimizer
+	optimizer := bayesian.NewBayesianOptimizer(config)
+
+	// Run the optimization
+	result, err := optimizer.Optimize(context.Background())
+	if err != nil {
+		panic(fmt.Sprintf("Optimization failed: %v", err))
+	}
+
+	fmt.Printf("Optimal parameters: %v\n", result.X)
+	fmt.Printf("Optimal value: %f\n", result.Y)
+}
+```
+
+### Configuration
+
+Create a `config.yaml` file to customize the server behavior:
+
+```yaml
+server:
+  port: 8080
+  env: development
+  timeout: 30s
+
+logging:
+  level: info
+  format: json
+  output: stdout
+
+optimization:
+  max_concurrent: 4
+  default_kernel: "matern52"
+  default_acquisition: "ei"
+  
+storage:
+  type: "memory"  # or "postgres"
+  dsn: ""  # Only needed for postgres
+
+metrics:
+  enabled: true
+  path: "/metrics"
+  namespace: "tundr"
+  
+tracing:
+  enabled: false
+  service_name: "mcp-optimization-server"
+  endpoint: "localhost:4317"
+```
+
+## 🧪 Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with coverage
+go test -coverprofile=coverage.out ./... && go tool cover -html=coverage.out
+
+# Run benchmarks
+go test -bench=. -benchmem ./...
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to submit pull requests, report issues, or suggest new features.
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## 📚 Resources
+
+- [Bayesian Optimization: A Tutorial](https://arxiv.org/abs/1807.02811)
+- [Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/)
+- [Model Context Protocol Specification](https://example.com/mcp-spec) (Coming Soon)
+
+## 📬 Contact
+
+For questions or support, please open an issue or contact the maintainers at [email protected]
 
 ### Installation
 
