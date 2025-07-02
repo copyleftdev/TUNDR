@@ -23,8 +23,8 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally
    ```bash
-   git clone git@github.com:your-username/mcp-optimization.git
-   cd mcp-optimization
+   git clone git@github.com:your-username/TUNDR.git
+   cd TUNDR
    ```
 3. Set up the development environment:
    ```bash

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"gonum.org/v1/gonum/mat"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 // BenchmarkGPFitScaling measures how GP fitting scales with input size

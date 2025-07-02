@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gonum.org/v1/gonum/mat"
 
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 func TestGPFitAndPredict(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/tundr/mcp-optimization-server
+module github.com/copyleftdev/TUNDR
 
 go 1.24.1
 

@@ -8,8 +8,8 @@ import (
 
 	"go.uber.org/zap"
 	"gonum.org/v1/gonum/mat"
-	"github.com/tundr/mcp-optimization-server/internal/optimization"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization"
+	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 // GP implements a Gaussian Process model for Bayesian Optimization

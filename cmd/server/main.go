@@ -13,10 +13,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/tundr/mcp-optimization-server/internal/config"
-	"github.com/tundr/mcp-optimization-server/internal/errors"
-	"github.com/tundr/mcp-optimization-server/internal/logging"
-	"github.com/tundr/mcp-optimization-server/internal/server"
+	"github.com/copyleftdev/TUNDR/internal/config"
+	"github.com/copyleftdev/TUNDR/internal/errors"
+	"github.com/copyleftdev/TUNDR/internal/logging"
+	"github.com/copyleftdev/TUNDR/internal/server"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 
-	"github.com/tundr/mcp-optimization-server/internal/config"
+	"github.com/copyleftdev/TUNDR/internal/config"
 )
 
 type Server struct {

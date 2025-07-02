@@ -2,11 +2,11 @@
   <img src="media/logo.png" alt="TUNDR MCP Logo" width="200">
   <h1>TUNDR MCP Optimization Server</h1>
   
-  [![Go Report Card](https://goreportcard.com/badge/github.com/copyleftdev/mcp-optimization)](https://goreportcard.com/report/github.com/copyleftdev/mcp-optimization)
-  [![Go Reference](https://pkg.go.dev/badge/github.com/copyleftdev/mcp-optimization.svg)](https://pkg.go.dev/github.com/copyleftdev/mcp-optimization)
+  [![Go Report Card](https://goreportcard.com/badge/github.com/copyleftdev/TUNDR)](https://goreportcard.com/report/github.com/copyleftdev/TUNDR)
+  [![Go Reference](https://pkg.go.dev/badge/github.com/copyleftdev/TUNDR.svg)](https://pkg.go.dev/github.com/copyleftdev/TUNDR)
   [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-  [![Tests](https://github.com/copyleftdev/mcp-optimization/actions/workflows/tests.yml/badge.svg)](https://github.com/copyleftdev/mcp-optimization/actions)
-  [![Coverage Status](https://coveralls.io/repos/github/copyleftdev/mcp-optimization/badge.svg?branch=main)](https://coveralls.io/github/copyleftdev/mcp-optimization?branch=main)
+  [![Tests](https://github.com/copyleftdev/TUNDR/actions/workflows/tests.yml/badge.svg)](https://github.com/copyleftdev/TUNDR/actions)
+  [![Coverage Status](https://coveralls.io/repos/github/copyleftdev/TUNDR/badge.svg?branch=main)](https://coveralls.io/github/copyleftdev/TUNDR?branch=main)
 
   A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes. Part of the CopyleftDev ecosystem.
 </div>
@@ -99,8 +99,8 @@ The server exposes MCP-compatible endpoints for seamless integration with other 
 
 ```bash
 # Clone the repository
-git clone https://github.com/copyleftdev/mcp-optimization.git
-cd mcp-optimization
+git clone https://github.com/copyleftdev/TUNDR.git
+cd TUNDR
 
 # Install dependencies
 go mod download
@@ -142,7 +142,7 @@ The server implements the following MCP endpoints:
 
 ### API Reference
 
-Check out the [API Documentation](https://pkg.go.dev/github.com/copyleftdev/mcp-optimization) for detailed information about the available methods and types.
+Check out the [API Documentation](https://pkg.go.dev/github.com/copyleftdev/TUNDR) for detailed information about the available methods and types.
 
 ### Example: Basic Usage
 

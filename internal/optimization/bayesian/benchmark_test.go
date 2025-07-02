@@ -9,9 +9,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gonum.org/v1/gonum/mat"
-	"github.com/tundr/mcp-optimization-server/internal/optimization"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/acquisition"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization"
+	"github.com/copyleftdev/TUNDR/internal/optimization/acquisition"
+	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 // BenchmarkGPFit measures the performance of fitting a Gaussian Process model

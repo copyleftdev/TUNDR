@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/tundr/mcp-optimization-server/internal/optimization"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/acquisition"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization"
+	"github.com/copyleftdev/TUNDR/internal/optimization/acquisition"
+	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 func TestNewBayesianOptimizer(t *testing.T) {

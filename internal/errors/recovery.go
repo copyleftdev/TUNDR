@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/tundr/mcp-optimization-server/internal/logging"
+	"github.com/copyleftdev/TUNDR/internal/logging"
 )
 
 // RecoveryMiddleware returns a middleware that recovers from panics.

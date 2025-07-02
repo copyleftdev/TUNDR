@@ -10,9 +10,9 @@ import (
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/optimize"
 
-	"github.com/tundr/mcp-optimization-server/internal/optimization"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/acquisition"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization"
+	"github.com/copyleftdev/TUNDR/internal/optimization/acquisition"
+	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 // BayesianOptimizer implements Bayesian Optimization
