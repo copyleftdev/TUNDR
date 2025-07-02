@@ -23,8 +23,8 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally
    ```bash
-   git clone git@github.com:your-username/mcp-optimization-server.git
-   cd mcp-optimization-server
+   git clone git@github.com:your-username/mcp-optimization.git
+   cd mcp-optimization
    ```
 3. Set up the development environment:
    ```bash
@@ -70,6 +70,8 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 - Use descriptive variable and function names
 - Handle errors explicitly
 - Write tests for new functionality
+- Document any MCP protocol extensions or modifications
+- Follow the existing patterns for MCP endpoint implementations
 
 ## Testing
 
@@ -130,6 +132,15 @@ Good documentation is crucial. When making changes:
 - Keep API documentation up to date
 - Ensure all exported types and functions have godoc comments
 
+## MCP Compliance
+
+When contributing to MCP-related functionality:
+
+1. Follow the MCP specification for any protocol changes
+2. Document any deviations from the standard
+3. Include tests that verify MCP compliance
+4. Update protocol documentation when adding new features
+
 ## License
 
-By contributing, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing, you agree that your contributions will be licensed under the GNU Affero General Public License v3.0.

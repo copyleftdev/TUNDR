@@ -2,30 +2,32 @@
   <img src="media/logo.png" alt="TUNDR MCP Logo" width="200">
   <h1>TUNDR MCP Optimization Server</h1>
   
-  [![Go Report Card](https://goreportcard.com/badge/github.com/tundr/mcp-optimization-server)](https://goreportcard.com/report/github.com/tundr/mcp-optimization-server)
-  [![Go Reference](https://pkg.go.dev/badge/github.com/tundr/mcp-optimization-server.svg)](https://pkg.go.dev/github.com/tundr/mcp-optimization-server)
-  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-  [![Tests](https://github.com/tundr/mcp-optimization-server/actions/workflows/tests.yml/badge.svg)](https://github.com/tundr/mcp-optimization-server/actions)
-  [![Coverage Status](https://coveralls.io/repos/github/tundr/mcp-optimization-server/badge.svg?branch=main)](https://coveralls.io/github/tundr/mcp-optimization-server?branch=main)
+  [![Go Report Card](https://goreportcard.com/badge/github.com/copyleftdev/mcp-optimization)](https://goreportcard.com/report/github.com/copyleftdev/mcp-optimization)
+  [![Go Reference](https://pkg.go.dev/badge/github.com/copyleftdev/mcp-optimization.svg)](https://pkg.go.dev/github.com/copyleftdev/mcp-optimization)
+  [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+  [![Tests](https://github.com/copyleftdev/mcp-optimization/actions/workflows/tests.yml/badge.svg)](https://github.com/copyleftdev/mcp-optimization/actions)
+  [![Coverage Status](https://coveralls.io/repos/github/copyleftdev/mcp-optimization/badge.svg?branch=main)](https://coveralls.io/github/copyleftdev/mcp-optimization?branch=main)
 
-  A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes.
+  A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes. Part of the CopyleftDev ecosystem.
 </div>
 
 ## 🌟 Features
 
 ### 🎯 Bayesian Optimization
 - Multiple kernel support (Matern 5/2, RBF, Custom)
-- Expected Improvement, Probability of Improvement, and UCB acquisition functions
+- Expected Improvement acquisition function (with support for Probability of Improvement and UCB)
 - Support for both minimization and maximization problems
 - Parallel evaluation of multiple points
 - Constrained optimization support
+- MCP-compliant API endpoints
 
 ### 🛠️ Robust Implementation
-- Comprehensive test coverage (>90%)
+- Comprehensive test coverage
 - Graceful error handling and recovery
 - Detailed structured logging with [zap](https://github.com/uber-go/zap)
 - Context-aware cancellation and timeouts
 - Memory-efficient matrix operations
+- MCP protocol compliance
 
 ### 🚀 Performance Optimizations
 - Fast matrix operations with [gonum](https://gonum.org/)
@@ -75,6 +77,17 @@
 
 ## 🚀 Quick Start
 
+### MCP Protocol Support
+
+This server implements the Model Context Protocol (MCP) for optimization tasks. The MCP provides a standardized way to:
+
+- Define optimization problems
+- Submit optimization tasks
+- Monitor optimization progress
+- Retrieve optimization results
+
+The server exposes MCP-compatible endpoints for seamless integration with other MCP-compliant tools and services.
+
 ### Prerequisites
 
 - Go 1.21 or later
@@ -86,8 +99,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/tundr/mcp-optimization-server.git
-cd mcp-optimization-server
+git clone https://github.com/copyleftdev/mcp-optimization.git
+cd mcp-optimization
 
 # Install dependencies
 go mod download
@@ -118,9 +131,18 @@ docker run -p 8080:8080 tundr/mcp-optimization-server
 
 ## 📚 Documentation
 
+### MCP Integration
+
+The server implements the following MCP endpoints:
+
+- `POST /mcp/optimize` - Submit a new optimization task
+- `GET /mcp/status/:id` - Check the status of an optimization task
+- `GET /mcp/result/:id` - Get the results of a completed optimization
+- `DELETE /mcp/task/:id` - Cancel a running optimization task
+
 ### API Reference
 
-Check out the [API Documentation](https://pkg.go.dev/github.com/tundr/mcp-optimization-server) for detailed information about the available methods and types.
+Check out the [API Documentation](https://pkg.go.dev/github.com/copyleftdev/mcp-optimization) for detailed information about the available methods and types.
 
 ### Example: Basic Usage
 
@@ -225,7 +247,7 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is part of the CopyleftDev ecosystem and is licensed under the GNU Affero General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 📚 Resources
 

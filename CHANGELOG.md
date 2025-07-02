@@ -1,11 +1,16 @@
 # Changelog
 
-All notable changes to the TUNDR MCP Optimization Server will be documented in this file.
+All notable changes to the CopyleftDev MCP Optimization Server will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Changed
+- Updated repository references to copyleftdev organization
+- Updated license to AGPL-3.0
+- Enhanced documentation with MCP protocol details
 
 ### Added
 - Initial implementation of Bayesian Optimization with Gaussian Processes
@@ -30,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed error message formatting and consistency
 
 ## [0.1.0] - 2025-07-02
+
+Initial release as part of the CopyleftDev ecosystem
 
 ### Added
 - Initial release of TUNDR MCP Optimization Server
