@@ -1,0 +1,117 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test and benchmark artifacts
+*.test
+*.test.exe
+*.prof
+*.mem
+*.cpu
+*.trace
+*.log
+coverage.*
+coverage/
+profile.out
+*.coverprofile
+
+# Output of the go coverage tool
+coverage.out
+coverage.html
+coverage.txt
+
+# Benchmark and profile outputs
+*.bench
+*.pprof
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# Environment variables
+.env
+
+# IDE specific files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and test outputs
+*.log
+test_output.log
+full_test_output.log
+*.testlog
+
+# Local development data
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Build output
+build/
+release/
+
+# Test output
+coverage.txt
+profile.out
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go workspace file
+go.work
+
+# IDE specific files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Local development data
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Build output
+build/
+release/
+
+# Test output
+coverage.txt
+profile.out

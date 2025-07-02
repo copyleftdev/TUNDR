@@ -1,0 +1,236 @@
+# TUNDR MCP Optimization Server - Windsurf Rules
+# This file defines the validation and configuration rules for the TUNDR project
+
+# Protocol Compliance Rules
+protocol:
+  name: "Model Context Protocol (MCP)"
+  version: "1.0"
+  transport:
+    - "JSON-RPC 2.0 over HTTP/2"
+    - "Legacy stdio support"
+  
+  message_validation:
+    required_fields:
+      - "jsonrpc: '2.0'"
+      - "id: string | number"
+      - "method: string"
+      - "params: object"
+    
+    error_handling:
+      required: true
+      validation_rules:
+        - "Validate JSON-RPC 2.0 message structure"
+        - "Verify method exists and is callable"
+        - "Validate parameter types and ranges"
+
+# Bayesian Optimization Rules
+bayesian_optimization:
+  # Kernel Configuration
+  kernels:
+    - "Matern52Kernel"
+    - "RBFKernel"
+    
+  # Acquisition Functions
+  acquisition_functions:
+    - "ExpectedImprovement"
+    
+  # Numerical Stability
+  numerical_stability:
+    jitter: 1e-6
+    cholesky_retries: 3
+    fallback_to_svd: true
+    
+  # Performance
+  max_observations: 10000
+  batch_processing: true
+  
+  # Default Hyperparameters
+  default_hyperparameters:
+    length_scale: 1.0
+    signal_variance: 1.0
+    noise_variance: 1e-6
+
+# Implementation Rules
+implementation:
+  language: "Go"
+  
+  # Interface Design
+  interfaces:
+    - name: "Optimizer"
+      methods:
+        - "Optimize(ctx context.Context, problem Problem) (*Solution, error)"
+  
+  # Dependencies
+  dependencies:
+    required:
+      - "gonum.org/v1/gonum"
+      - "github.com/go-chi/chi/v5"
+      - "github.com/go-chi/cors"
+    
+    recommended:
+      - "go.uber.org/zap"
+      - "github.com/stretchr/testify/assert"
+      - "github.com/stretchr/testify/require"
+
+# System Architecture
+architecture:
+  storage:
+    small_scale: "In-memory with periodic snapshots"
+    large_scale: "PostgreSQL with read replicas"
+    caching: "Redis with LRU eviction"
+  
+  performance:
+    concurrency: "Goroutine pool with worker pattern"
+    timeouts:
+      request: "30s"
+      read: "30s"
+      write: "30s"
+      idle: "120s"
+
+# Security
+security:
+  authentication: "API Key or OAuth 2.1"
+  transport: "TLS 1.3 required"
+  headers:
+    required:
+      - "Content-Type: application/json"
+      - "Authorization: Bearer <token>"
+    security_headers:
+      - "Strict-Transport-Security"
+      - "X-Content-Type-Options: nosniff"
+      - "X-Frame-Options: DENY"
+      - "X-XSS-Protection: 1; mode=block"
+  
+  rate_limiting:
+    enabled: true
+    requests_per_second: 100
+    burst: 50
+
+# Monitoring and Observability
+monitoring:
+  metrics:
+    enabled: true
+    endpoint: "/metrics"
+    collection_interval: "15s"
+    
+    custom_metrics:
+      - "optimization_iterations_total"
+      - "optimization_duration_seconds"
+      - "model_fit_errors_total"
+      - "acquisition_function_evaluations_total"
+  
+  logging:
+    level: "info"  # debug, info, warn, error
+    format: "json"
+    fields:
+      - "timestamp"
+      - "level"
+      - "msg"
+      - "method"
+      - "path"
+      - "status"
+      - "latency"
+
+# Testing
+testing:
+  unit_test_coverage: 85%  # Minimum coverage required
+  integration_tests: required
+  benchmark_tests: required
+  
+  load_testing:
+    concurrent_users: 1000
+    duration: "5m"
+    error_rate: "< 1%"
+    
+  property_based_testing:
+    enabled: true
+    num_runs: 100
+
+# Documentation
+documentation:
+  required:
+    - "API documentation (OpenAPI 3.0)"
+    - "Deployment guide"
+    - "Performance benchmarks"
+    - "Security considerations"
+    - "Code comments for all exported types and functions"
+  
+  recommended:
+    - "Architecture decision records (ADRs)"
+    - "Example configurations"
+    - "Troubleshooting guide"
+    - "Performance tuning guide"
+
+# Deployment
+deployment:
+  container:
+    base_image: "golang:1.21-alpine"
+    user: "nobody:nogroup"
+    ports:
+      - "8080"  # HTTP
+      - "8443"  # HTTPS
+    
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+  
+  health_checks:
+    liveness: "/healthz"
+    readiness: "/ready"
+    startup: "/startup"
+
+# Validation Rules
+validation:
+  # Bayesian Optimization Validation
+  - name: "Bayesian Optimization Parameters"
+    description: "Verify kernel selection and hyperparameters"
+    check: "validate_bayesian_params"
+    
+  - name: "Kernel Parameters"
+    description: "Validate kernel parameters and constraints"
+    check: "validate_kernel_params"
+    
+  # Protocol Validation
+  - name: "MCP Message Format"
+    description: "Verify JSON-RPC 2.0 compliance"
+    check: "validate_mcp_message"
+    
+  # Security Validation
+  - name: "Authentication"
+    description: "Verify authentication implementation"
+    check: "validate_auth"
+    
+  - name: "TLS Configuration"
+    description: "Verify TLS 1.3 is enabled"
+    check: "validate_tls"
+
+# Custom Validation Functions
+custom_validation:
+  - name: "validate_bayesian_params"
+    description: "Validate Bayesian optimization parameters"
+    implementation: "internal/validation/bayesian.go"
+    
+  - name: "validate_kernel_params"
+    description: "Validate kernel parameters"
+    implementation: "internal/validation/kernel.go"
+    
+  - name: "validate_mcp_message"
+    description: "Validate MCP message format"
+    implementation: "internal/validation/protocol.go"
+
+# Ignore Rules (for linters, etc.)
+ignore:
+  - "**/*_test.go"
+  - "**/mocks/*"
+  - "**/vendor/**"
+  - "**/tmp/**"
+  - "**/.git/**"
+  - "**/testdata/*"
+
+# Version Information
+version: "1.0.0"
+updated_at: "2025-06-30"

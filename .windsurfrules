@@ -1,0 +1,209 @@
+# TUNDR MCP Optimization Server - Windsurf Rules
+# This file defines the validation and configuration rules for the TUNDR project
+
+# Protocol Compliance Rules
+protocol:
+  name: "Model Context Protocol (MCP)"
+  version: "1.0"
+  transport:
+    - "JSON-RPC 2.0 over HTTP/2"
+    - "Legacy stdio support"
+  
+  # Message Structure Validation
+  message_validation:
+    required_fields:
+      - "jsonrpc: '2.0'"
+      - "id: string | number"
+      - "method: string"
+      - "params: object"
+    
+    error_handling:
+      required: true
+      validation_rules:
+        - "Validate JSON-RPC 2.0 message structure"
+        - "Verify method exists and is callable"
+        - "Validate parameter types and ranges"
+
+# Mathematical Optimization Rules
+optimization:
+  algorithms:
+    bayesian_optimization:
+      kernel: "Matérn 5/2 | RBF | Custom"
+      hyperparameters:
+        optimization: "Multiple restarts for marginal likelihood maximization"
+        stability: "Cholesky decomposition with jitter (1e-6)"
+      scaling: "Max 10,000 observations (standard GP)"
+    
+    cma_es:
+      population_size: "λ = 4 + floor(3*log(n))"
+      selection_size: "μ = λ/2"
+      step_size_control: "CSA (Cumulative Step-size Adaptation)"
+      stability_checks:
+        - "Eigendecomposition every 10 generations"
+        - "Condition number monitoring"
+    
+    simulated_annealing:
+      cooling_schedule: "Exponential (α ∈ [0.8, 0.99])"
+      temperature_init: "Accept 80-90% initial moves"
+      metropolis_criterion: "P(accept) = min(1, exp(-ΔE/T))"
+
+# Implementation Rules
+implementation:
+  language: "Go"
+  
+  # Interface Design
+  interfaces:
+    - name: "Optimizer"
+      methods:
+        - "Optimize(ctx context.Context, problem Problem) (*Solution, error)"
+  
+  # Required Libraries
+  dependencies:
+    required:
+      - "gonum.org/v1/gonum"
+      - "github.com/go-chi/chi/v5"
+      - "github.com/go-chi/cors"
+    
+    deprecated:
+      - "github.com/boltdb/bolt"  # Replaced by go.etcd.io/bbolt
+    
+    recommended:
+      - "go.etcd.io/bbolt"         # For embedded key-value storage
+      - "github.com/dgraph-io/badger"  # Alternative for write-heavy workloads
+      - "github.com/prometheus/client_golang"  # For metrics
+
+# System Architecture Rules
+architecture:
+  storage:
+    small_scale: "SQLite with Litestream"
+    large_scale: "PostgreSQL with read replicas"
+    caching: "Redis"
+  
+  performance:
+    concurrency: "Goroutine pool with worker pattern"
+    timeouts:
+      request: "30s"
+      read: "30s"
+      write: "30s"
+      idle: "120s"
+
+# Security Rules
+security:
+  authentication: "OAuth 2.1"
+  transport: "TLS 1.3 required"
+  headers:
+    required:
+      - "Content-Type: application/json"
+      - "Authorization: Bearer <token>"
+    security_headers:
+      - "Strict-Transport-Security"
+      - "X-Content-Type-Options: nosniff"
+      - "X-Frame-Options: DENY"
+      - "X-XSS-Protection: 1; mode=block"
+  
+  rate_limiting:
+    enabled: true
+    requests_per_second: 100
+    burst: 50
+
+# Monitoring and Observability
+monitoring:
+  metrics:
+    enabled: true
+    endpoint: "/metrics"
+    collection_interval: "15s"
+  
+  logging:
+    level: "info"  # debug, info, warn, error
+    format: "json"
+    fields:
+      - "timestamp"
+      - "level"
+      - "msg"
+      - "method"
+      - "path"
+      - "status"
+      - "latency"
+
+# Testing Requirements
+testing:
+  unit_test_coverage: 80%  # Minimum coverage required
+  integration_tests: required
+  load_testing:
+    concurrent_users: 1000
+    duration: "5m"
+    error_rate: "< 1%"
+
+# Documentation Requirements
+documentation:
+  required:
+    - "API documentation (OpenAPI 3.0)"
+    - "Deployment guide"
+    - "Performance benchmarks"
+    - "Security considerations"
+  
+  recommended:
+    - "Architecture decision records (ADRs)"
+    - "Example configurations"
+    - "Troubleshooting guide"
+
+# Deployment Rules
+deployment:
+  container:
+    base_image: "golang:1.21-alpine"
+    user: "nobody:nogroup"
+    ports:
+      - "8080"  # HTTP
+      - "8443"  # HTTPS
+  
+  health_checks:
+    liveness: "/healthz"
+    readiness: "/ready"
+    startup: "/startup"
+
+# Validation Rules
+validation:
+  # Mathematical Validation
+  - name: "Bayesian Optimization Parameters"
+    description: "Verify kernel selection and hyperparameters"
+    check: "validate_bayesian_params"
+    
+  - name: "CMA-ES Configuration"
+    description: "Validate population size and selection parameters"
+    check: "validate_cmaes_config"
+    
+  # Protocol Validation
+  - name: "MCP Message Format"
+    description: "Verify JSON-RPC 2.0 compliance"
+    check: "validate_mcp_message"
+    
+  # Security Validation
+  - name: "Authentication"
+    description: "Verify OAuth 2.1 implementation"
+    check: "validate_auth"
+    
+  - name: "TLS Configuration"
+    description: "Verify TLS 1.3 is enabled"
+    check: "validate_tls"
+
+# Custom Validation Functions
+custom_validation:
+  - name: "validate_bayesian_params"
+    description: "Validate Bayesian optimization parameters"
+    implementation: "internal/validation/bayesian.go"
+    
+  - name: "validate_cmaes_config"
+    description: "Validate CMA-ES configuration"
+    implementation: "internal/validation/cmaes.go"
+    
+  - name: "validate_mcp_message"
+    description: "Validate MCP message format"
+    implementation: "internal/validation/protocol.go"
+
+# Ignore Rules (for linters, etc.)
+ignore:
+  - "**/*_test.go"
+  - "**/mocks/*"
+  - "**/vendor/**"
+  - "**/tmp/**"
+  - "**/.git/**"
