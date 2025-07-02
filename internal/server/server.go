@@ -5,18 +5,31 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
 
 	"github.com/copyleftdev/TUNDR/internal/config"
+	"github.com/copyleftdev/TUNDR/internal/logging"
 )
+
+// Logger defines the logging interface used by the server
+// This allows us to be flexible with our logging implementation
+type Logger interface {
+	Debug(msg string, fields ...map[string]interface{})
+	Info(msg string, fields ...map[string]interface{})
+	Warn(msg string, fields ...map[string]interface{})
+	Error(msg string, fields ...map[string]interface{})
+	Fatal(msg string, fields ...map[string]interface{})
+	WithFields(fields map[string]interface{}) *logging.Logger
+}
 
 type Server struct {
 	cfg    *config.Config
-	logger *zap.Logger
+	logger Logger
 	// Add other dependencies like storage, optimization services, etc.
 }
 
-func NewServer(cfg *config.Config, logger *zap.Logger) *Server {
+// NewServer creates a new server instance with the given config and logger
+// The logger parameter accepts any type that implements the Logger interface
+func NewServer(cfg *config.Config, logger Logger) *Server {
 	return &Server{
 		cfg:    cfg,
 		logger: logger,
@@ -115,16 +128,20 @@ func (s *Server) handleOptimizationCancel(params []interface{}) error {
 
 // respondWithError sends a JSON-RPC 2.0 error response
 func (s *Server) respondWithError(w http.ResponseWriter, code int, message string, id interface{}) {
+	s.logger.Error("Request error", map[string]interface{}{
+		"status":  code,
+		"message": message,
+	})
+
 	response := map[string]interface{}{
 		"jsonrpc": "2.0",
-		"id":      id,
 		"error": map[string]interface{}{
 			"code":    code,
 			"message": message,
 		},
+		"id": id,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }

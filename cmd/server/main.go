@@ -14,7 +14,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/copyleftdev/TUNDR/internal/config"
-	"github.com/copyleftdev/TUNDR/internal/errors"
 	"github.com/copyleftdev/TUNDR/internal/logging"
 	"github.com/copyleftdev/TUNDR/internal/server"
 )
@@ -28,11 +27,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Initialize logger
+	// Initialize base logger
 	logger, err := logging.NewLogger(&logging.Config{
-		Level:  cfg.LogLevel,
-		Format: cfg.LogFormat,
-		Output: cfg.LogOutput,
+		Level:  cfg.Logging.Level,
+		Format: cfg.Logging.Format,
+		Output: cfg.Logging.Output,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize logger: %v\n", err)
@@ -41,10 +40,15 @@ func main() {
 
 	// Create a context with logger
 	ctx := context.Background()
-	ctxLogger := logging.FromContext(ctx).WithFields(map[string]interface{}{
+	
+	// Create a service logger with additional fields
+	serviceLogger := logger.WithFields(map[string]interface{}{
 		"service": "mcp-optimization-server",
 		"version": "1.0.0",
 	})
+
+	// Create a context logger
+	ctxLogger := &logging.CtxLogger{Logger: serviceLogger}
 	ctx = ctxLogger.WithContext(ctx)
 
 	// Create router
@@ -56,8 +60,26 @@ func main() {
 	r.Use(logging.Middleware(logger)) // Our custom logging middleware
 	
 	// Error handling and recovery
-	r.Use(errors.RecoveryMiddleware(logger)) // Custom panic recovery
-	r.Use(errors.ErrorHandler(logger))       // Error response handling
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if err := recover(); err != nil {
+					serviceLogger.Error("Recovered from panic", map[string]interface{}{"error": fmt.Errorf("%v", err)})
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				}
+			}()
+			next.ServeHTTP(w, r)
+		})
+	})
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r)
+			if err := r.Context().Err(); err != nil {
+				serviceLogger.Error("Request error", map[string]interface{}{"error": fmt.Errorf("%v", err)})
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
+		})
+	})
 	
 	// Timeout and other standard middleware
 	r.Use(middleware.Timeout(60 * time.Second))
@@ -65,19 +87,30 @@ func main() {
 	// Add request context logger
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Add logger to request context
-			reqLogger := logger.WithFields(map[string]interface{}{
+			// Get the logger from context or use the base logger
+			ctxLogger := logging.FromContext(r.Context())
+			if ctxLogger == nil {
+				ctxLogger = &logging.CtxLogger{Logger: logger}
+			}
+
+			// Add request ID to logger
+			reqLogger := ctxLogger.Logger.WithFields(map[string]interface{}{
 				"request_id": middleware.GetReqID(r.Context()),
 			})
-			ctx := reqLogger.WithContext(r.Context())
-			next.ServeHTTP(w, r.WithContext(ctx))
+
+			// Create a new context with the request logger
+			reqCtxLogger := &logging.CtxLogger{Logger: reqLogger}
+			reqCtx := reqCtxLogger.WithContext(r.Context())
+			next.ServeHTTP(w, r.WithContext(reqCtx))
 		})
 	})
 
 	// Add health check endpoint
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		logger := logging.FromContext(r.Context())
-		logger.Info("Health check")
+		if logger != nil {
+			logger.Info("Health check")
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
@@ -85,25 +118,26 @@ func main() {
 	// Add metrics endpoint
 	r.Handle("/metrics", promhttp.Handler())
 
-	// Initialize and register API routes
-	srv := server.NewServer(cfg, logger)
+	// Create server instance with our logger
+	srv := server.NewServer(cfg, serviceLogger)
 	srv.RegisterRoutes(r)
 
 	// Start server
-	srvHTTP := &http.Server{
+	httpServer := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.HTTP.Port),
 		Handler: r,
 	}
 
-	// Add metrics endpoint
-	r.Handle("/metrics", promhttp.Handler())
-
-	// Start server in a goroutine
+	// Start HTTP server
 	go func() {
-		logger.Info("Starting server", map[string]interface{}{"port": cfg.HTTP.Port})
-		if err := srvHTTP.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("Failed to start server", map[string]interface{}{"error": err})
-			os.Exit(1)
+		serviceLogger.Info("Starting server", map[string]interface{}{
+			"address": httpServer.Addr,
+		})
+
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serviceLogger.Fatal("Failed to start server", map[string]interface{}{
+				"error": err.Error(),
+			})
 		}
 	}()
 
@@ -112,23 +146,23 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Info("Shutting down server...")
+	serviceLogger.Info("Shutting down server...")
 
 	// Create a deadline to wait for
 	shutdownCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	// Shutdown the server
-	if err := srvHTTP.Shutdown(shutdownCtx); err != nil {
-		logger.Error("Server forced to shutdown", map[string]interface{}{"error": err})
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		serviceLogger.Error("Server forced to shutdown", map[string]interface{}{"error": err})
 		os.Exit(1)
 	}
 
-	logger.Info("Server exited gracefully")
+	serviceLogger.Info("Server stopped")
 
 	if err := srv.Close(); err != nil {
-		logger.Error("error closing server resources", map[string]interface{}{"error": err})
+		serviceLogger.Error("error closing server resources", map[string]interface{}{"error": err})
 	}
 
-	logger.Info("server exited properly")
+	serviceLogger.Info("server exited properly")
 }
