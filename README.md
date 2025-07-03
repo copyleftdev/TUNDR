@@ -133,12 +133,84 @@ docker run -p 8080:8080 tundr/mcp-optimization-server
 
 ### MCP Integration
 
-The server implements the following MCP endpoints:
+The server implements the following MCP-compatible endpoints:
 
-- `POST /mcp/optimize` - Submit a new optimization task
-- `GET /mcp/status/:id` - Check the status of an optimization task
-- `GET /mcp/result/:id` - Get the results of a completed optimization
-- `DELETE /mcp/task/:id` - Cancel a running optimization task
+#### REST API
+- `POST /api/v1/optimize` - Submit a new optimization task
+- `GET /api/v1/status/{id}` - Check the status of an optimization task
+- `DELETE /api/v1/optimization/{id}` - Cancel a running optimization task
+
+#### JSON-RPC 2.0 Endpoint
+- `POST /rpc` - Unified endpoint for all JSON-RPC 2.0 operations
+
+##### Available JSON-RPC Methods
+1. `optimization.start` - Start a new optimization
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": 1,
+     "method": "optimization.start",
+     "params": [{
+       "objective": "minimize",
+       "parameters": [
+         {"name": "x", "type": "float", "bounds": [0, 10]},
+         {"name": "y", "type": "float", "bounds": [0, 10]}
+       ]
+     }]
+   }
+   ```
+
+2. `optimization.status` - Get status of an optimization
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": 2,
+     "method": "optimization.status",
+     "params": ["optimization_id"]
+   }
+   ```
+
+3. `optimization.cancel` - Cancel an optimization
+   ```json
+   {
+     "jsonrpc": "2.0",
+     "id": 3,
+     "method": "optimization.cancel",
+     "params": ["optimization_id"]
+   }
+   ```
+
+#### Error Responses
+All endpoints return errors in the following format:
+
+##### REST API
+```json
+{
+  "error": {
+    "code": 400,
+    "message": "Invalid input parameters"
+  }
+}
+```
+
+##### JSON-RPC 2.0
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32602,
+    "message": "Invalid params"
+  }
+}
+```
+
+Common error codes:
+- `-32600` - Invalid Request
+- `-32601` - Method not found
+- `-32602` - Invalid params
+- `-32603` - Internal error
+- `-32000` to `-32099` - Server error
 
 ### API Reference
 
@@ -154,9 +226,8 @@ import (
 	"fmt"
 	"math"
 	
-	"github.com/tundr/mcp-optimization-server/internal/optimization"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/bayesian"
-	"github.com/tundr/mcp-optimization-server/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization"
+	"github.com/copyleftdev/TUNDR/internal/optimization/bayesian"
 )
 
 func main() {
@@ -171,23 +242,29 @@ func main() {
 
 	// Create optimizer configuration
 	config := optimization.OptimizerConfig{
-		Objective:     objective,
-		Bounds:        bounds,
-		MaxIterations: 50,
+		Objective:      objective,
+		Bounds:         bounds,
+		MaxIterations:  50,
 		NInitialPoints: 10,
 	}
 
-	// Create a new Bayesian optimizer
-	optimizer := bayesian.NewBayesianOptimizer(config)
+	// Create and run the optimizer
+	optimizer, err := bayesian.NewBayesianOptimizer(config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create optimizer: %v", err))
+	}
 
 	// Run the optimization
-	result, err := optimizer.Optimize(context.Background())
+	result, err := optimizer.Optimize(context.Background(), config)
 	if err != nil {
 		panic(fmt.Sprintf("Optimization failed: %v", err))
 	}
 
-	fmt.Printf("Optimal parameters: %v\n", result.X)
-	fmt.Printf("Optimal value: %f\n", result.Y)
+	// Print results
+	fmt.Printf("Optimal parameters: %v\n", result.BestSolution.Parameters)
+	fmt.Printf("Optimal value: %f\n", result.BestSolution.Value)
+	fmt.Printf("Number of iterations: %d\n", result.Iterations)
+	fmt.Printf("Converged: %v\n", result.Converged)
 }
 ```
 
