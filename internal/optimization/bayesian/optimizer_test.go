@@ -8,10 +8,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gonum.org/v1/gonum/mat"
 
 	"github.com/copyleftdev/TUNDR/internal/optimization"
-	"github.com/copyleftdev/TUNDR/internal/optimization/acquisition"
-	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
+	"github.com/copyleftdev/TUNDR/internal/optimization/bayesian/acquisition"
+	"github.com/copyleftdev/TUNDR/internal/optimization/bayesian/kernels"
 )
 
 func TestNewBayesianOptimizer(t *testing.T) {
@@ -304,7 +305,6 @@ func TestBayesianOptimizerWithCustomKernel(t *testing.T) {
 
 	// Create a custom kernel
 	kernel := kernels.NewMatern52Kernel(1.0, 1.0)
-
 
 	// Create optimizer with custom kernel
 	optimizer := &BayesianOptimizer{

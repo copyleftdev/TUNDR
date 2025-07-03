@@ -7,72 +7,132 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/copyleftdev/TUNDR/internal/optimization"
+	"github.com/copyleftdev/TUNDR/internal/optimization/bayesian/acquisition"
+	"github.com/copyleftdev/TUNDR/internal/optimization/bayesian/kernels"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/optimize"
-
-	"github.com/copyleftdev/TUNDR/internal/optimization"
-	"github.com/copyleftdev/TUNDR/internal/optimization/acquisition"
-	"github.com/copyleftdev/TUNDR/internal/optimization/kernels"
 )
 
 // BayesianOptimizer implements Bayesian Optimization
+// AcquisitionFunction defines the interface for acquisition functions
+type AcquisitionFunction interface {
+	Acquire(gp *GP, X *mat.Dense, y *mat.VecDense, bounds [][2]float64, rng *rand.Rand) ([]float64, error)
+}
+
 type BayesianOptimizer struct {
 	// Configuration
-	config optimization.OptimizerConfig
+	config BayesianOptimizerConfig
 
 	// Gaussian Process model
 	gp *GP
 
 	// Acquisition function
-	acquisition *acquisition.ExpectedImprovement
+	acquisition AcquisitionFunction
 
 	// Random number generator
-	rng *rand.Rand
-
-	// Best solution found
-	bestSolution *optimization.Solution
+	rand *rand.Rand
 
 	// History of evaluations
 	history []optimization.Evaluation
 
+	// Best solution found so far
+	bestSolution *optimization.Solution
+
 	// For cancellation
 	cancel context.CancelFunc
+
+	// Best values at each iteration
+	bestValues []float64
+}
+
+// BayesianOptimizerConfig extends the base optimization config with Bayesian-specific settings
+type BayesianOptimizerConfig struct {
+	// Base optimization config
+	optimization.OptimizerConfig
+	
+	// Tolerance is the minimum improvement required to consider the optimization converged
+	Tolerance float64 `json:"tolerance"`
+	// Patience is the number of iterations to wait before declaring convergence if no improvement is made
+	Patience int `json:"patience"`
+}
+
+// DefaultBayesianOptimizerConfig returns the default configuration for the BayesianOptimizer
+func DefaultBayesianOptimizerConfig() *BayesianOptimizerConfig {
+	return &BayesianOptimizerConfig{
+		OptimizerConfig: optimization.OptimizerConfig{
+			MaxIterations:  100,
+			NInitialPoints: 10,
+			RandomSeed:     42,
+		},
+		Tolerance: 1e-6, // Default tolerance for convergence
+		Patience:  5,    // Number of iterations to wait before declaring convergence
+	}
 }
 
 // NewBayesianOptimizer creates a new Bayesian Optimizer
-func NewBayesianOptimizer(config optimization.OptimizerConfig) (*BayesianOptimizer, error) {
-	if config.NInitialPoints < 1 {
-		config.NInitialPoints = 10 // Default value
+func NewBayesianOptimizer(cfg optimization.OptimizerConfig) (*BayesianOptimizer, error) {
+	if cfg.MaxIterations < 1 {
+		cfg.MaxIterations = 50 // Default value
 	}
 
-	if config.MaxIterations < 1 {
-		config.MaxIterations = 50 // Default value
+	if cfg.NInitialPoints < 1 {
+		cfg.NInitialPoints = 10 // Default value
 	}
 
 	// Initialize random number generator
-	rng := rand.New(rand.NewSource(config.RandomSeed))
-	if config.RandomSeed == 0 {
+	rng := rand.New(rand.NewSource(cfg.RandomSeed))
+	if cfg.RandomSeed == 0 {
 		rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 
-	// Default kernel: Matern 5/2 with automatic relevance determination
+	// Initialize GP with default config
 	kernel := kernels.NewMatern52Kernel(1.0, 1.0)
+	gp := NewGP(kernel, 1e-6) // Small noise for numerical stability
 
 	return &BayesianOptimizer{
-		config:     config,
-		gp:         NewGP(kernel, 1e-6), // Small noise for numerical stability
-		acquisition: acquisition.NewExpectedImprovement(math.Inf(1), 0.01),
-		rng:        rng,
-		history:    make([]optimization.Evaluation, 0, config.MaxIterations+config.NInitialPoints),
+		config: BayesianOptimizerConfig{
+			OptimizerConfig: cfg,
+			Tolerance:       1e-6, // Default tolerance
+			Patience:        5,    // Default patience
+		},
+		gp:             gp,
+		rand:           rng,
+		history:        make([]optimization.Evaluation, 0, cfg.MaxIterations+cfg.NInitialPoints),
+		acquisition:    acquisition.NewExpectedImprovement(math.Inf(1), 0.01),
+		bestSolution:   nil,
+		bestValues:     make([]float64, 0),
 	}, nil
 }
 
-// Optimize runs the Bayesian Optimization process
-func (bo *BayesianOptimizer) Optimize(ctx context.Context, config optimization.OptimizerConfig) (*optimization.OptimizationResult, error) {
+// Optimize runs the Bayesian optimization
+func (bo *BayesianOptimizer) Optimize(ctx context.Context, cfg optimization.OptimizerConfig) (*optimization.OptimizationResult, error) {
 	// Update config if provided
-	if config.Objective != nil {
-		bo.config = config
+	if cfg.Objective != nil {
+		bo.config.Objective = cfg.Objective
 	}
+	if cfg.Bounds != nil {
+		bo.config.Bounds = cfg.Bounds
+	}
+	if cfg.MaxIterations > 0 {
+		bo.config.MaxIterations = cfg.MaxIterations
+	}
+	if cfg.NInitialPoints > 0 {
+		bo.config.NInitialPoints = cfg.NInitialPoints
+	}
+
+	// Validate configuration
+	if bo.config.Objective == nil {
+		return nil, fmt.Errorf("objective function is required")
+	}
+	if len(bo.config.Bounds) == 0 {
+		return nil, fmt.Errorf("parameter bounds are required")
+	}
+
+	// Reset state
+	bo.history = bo.history[:0]
+	bo.bestSolution = nil
+	bo.bestValues = bo.bestValues[:0]
 
 	// Create a cancellable context
 	ctx, bo.cancel = context.WithCancel(ctx)
@@ -99,7 +159,6 @@ func (bo *BayesianOptimizer) Optimize(ctx context.Context, config optimization.O
 
 		// Update best solution
 		bo.updateBestSolution(x, value)
-
 
 		// Record evaluation
 		eval := optimization.Evaluation{
@@ -129,13 +188,10 @@ func (bo *BayesianOptimizer) Optimize(ctx context.Context, config optimization.O
 			return nil, fmt.Errorf("error fitting GP: %v", err)
 		}
 
-		// Update acquisition function with best observed value
-		bo.acquisition.UpdateBest(bo.bestSolution.Value)
-
-		// Find next point to evaluate by maximizing acquisition function
-		nextPoint, err := bo.maximizeAcquisition()
+		// Select next point using acquisition function
+		nextPoint, err := bo.acquisition.Acquire(bo.gp, X, y, bo.config.Bounds, bo.rand)
 		if err != nil {
-			return nil, fmt.Errorf("error maximizing acquisition function: %v", err)
+			return nil, fmt.Errorf("failed to select next point: %v", err)
 		}
 
 		// Evaluate the objective function at the next point
@@ -147,7 +203,6 @@ func (bo *BayesianOptimizer) Optimize(ctx context.Context, config optimization.O
 		// Update best solution
 		bo.updateBestSolution(nextPoint, value)
 
-
 		// Record evaluation
 		eval := optimization.Evaluation{
 			Iteration: i + bo.config.NInitialPoints,
@@ -158,7 +213,33 @@ func (bo *BayesianOptimizer) Optimize(ctx context.Context, config optimization.O
 		}
 		bo.history = append(bo.history, eval)
 
-		// TODO: Add convergence check
+		// Check for convergence after initial points
+		if i >= bo.config.NInitialPoints + bo.config.Patience {
+			// Calculate the best value in the last N iterations (patience window)
+			bestInWindow := bo.history[len(bo.history)-1].Solution.Value
+			for j := 2; j <= bo.config.Patience; j++ {
+				if len(bo.history)-j >= 0 && bo.history[len(bo.history)-j].Solution.Value < bestInWindow {
+					bestInWindow = bo.history[len(bo.history)-j].Solution.Value
+				}
+			}
+
+			// Calculate the best value before the patience window
+			bestBefore := bo.bestSolution.Value
+			if len(bo.history) > bo.config.Patience {
+				bestBefore = bo.history[len(bo.history)-bo.config.Patience-1].Solution.Value
+			}
+
+			// Check if the improvement is below tolerance
+			improvement := math.Abs(bestBefore - bestInWindow)
+			if improvement < bo.config.Tolerance {
+				return &optimization.OptimizationResult{
+					BestSolution: bo.bestSolution,
+					History:     bo.history,
+					Iterations:  i + 1,
+					Converged:   true,
+				}, nil
+			}
+		}
 	}
 
 	return &optimization.OptimizationResult{
@@ -190,17 +271,22 @@ func (bo *BayesianOptimizer) Stop() {
 func (bo *BayesianOptimizer) updateBestSolution(params []float64, value float64) {
 	if bo.bestSolution == nil || value < bo.bestSolution.Value {
 		bo.bestSolution = &optimization.Solution{
-			Parameters: append([]float64(nil), params...),
+			Parameters: params,
 			Value:      value,
 		}
 	}
+	// Track the best value at each iteration
+	bo.bestValues = append(bo.bestValues, bo.bestSolution.Value)
 }
 
 // prepareTrainingData prepares the training data for the GP
 func (bo *BayesianOptimizer) prepareTrainingData() (*mat.Dense, *mat.VecDense) {
 	nSamples := len(bo.history)
-	nDims := len(bo.config.Bounds)
+	if nSamples == 0 {
+		return nil, nil
+	}
 
+	nDims := len(bo.history[0].Solution.Parameters)
 	X := mat.NewDense(nSamples, nDims, nil)
 	y := mat.NewVecDense(nSamples, nil)
 
