@@ -8,13 +8,45 @@
   [![Tests](https://github.com/copyleftdev/TUNDR/actions/workflows/tests.yml/badge.svg)](https://github.com/copyleftdev/TUNDR/actions)
   [![Coverage Status](https://coveralls.io/repos/github/copyleftdev/TUNDR/badge.svg?branch=main)](https://coveralls.io/github/copyleftdev/TUNDR?branch=main)
 
-  A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes. Part of the CopyleftDev ecosystem.
+  A high-performance optimization server implementing the Model Context Protocol (MCP) for mathematical optimization tasks, with a focus on Bayesian Optimization using Gaussian Processes. Designed for reliability, scalability, and ease of integration in production environments.
 </div>
 
 ## 🌟 Features
 
-### 🎯 Bayesian Optimization
+### 🎯 Key Features
+
+#### Bayesian Optimization
 - Multiple kernel support (Matern 5/2, RBF, Custom)
+- Parallel evaluation of multiple points
+- Constrained optimization support
+- Efficient global optimization of expensive black-box functions
+
+#### Real-World Use Cases
+
+1. **Hyperparameter Tuning**
+   - Optimize machine learning model hyperparameters with minimal trials
+   - Supports both continuous and categorical parameters
+   - Ideal for deep learning, XGBoost, and other ML frameworks
+
+2. **Engineering Design Optimization**
+   - Optimize product designs with multiple competing objectives
+   - Handle physical and operational constraints
+   - Applications in aerospace, automotive, and manufacturing
+
+3. **Scientific Research**
+   - Optimize experimental parameters in chemistry and physics
+   - Minimize cost function evaluations in computationally expensive simulations
+   - Adaptive experimental design
+
+4. **Financial Modeling**
+   - Portfolio optimization under constraints
+   - Algorithmic trading parameter optimization
+   - Risk management parameter tuning
+
+5. **Industrial Process Optimization**
+   - Optimize manufacturing processes
+   - Energy consumption minimization
+   - Yield improvement in production lines
 - Expected Improvement acquisition function (with support for Probability of Improvement and UCB)
 - Support for both minimization and maximization problems
 - Parallel evaluation of multiple points
